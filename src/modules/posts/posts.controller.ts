@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, NotFoundException, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PostsService } from './posts.service';
 import { Post as PostEntity } from './post.entity';
 import { PostDto } from './dto/post.dto';
+import { NotFoundException, ConflictException } from '@nestjs/common';
 
 @Controller('posts')
 export class PostsController {
@@ -33,6 +34,73 @@ export class PostsController {
     async create(@Body() post: PostDto, @Request() req): Promise<PostEntity> {
         // create a new post and return the newly created post
         return await this.postService.create(post, req.user.id);
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Put(':postId/like')
+    async addLike(@Param('postId') postId: string, @Body('userId') userId : string): Promise<PostEntity> {
+    
+        const post = await this.postService.findOne(postId);
+        console.log("\n\nBefore update",post);
+
+        if (!post) {
+            throw new NotFoundException('This Post doesn\'t exist');
+        }
+
+        if(!post.likes) {
+            post.likes = []
+        }
+        post.likes = post.likes ? [...post.likes, userId] : [userId];
+
+        await post.save()
+        return post;
+    }
+  
+    @UseGuards(AuthGuard('jwt'))
+    @Put(':postId/comment')
+    async addComment(@Param('postId') postId: string, @Body() comment : JSON): Promise<PostEntity> {
+    
+        const post = await this.postService.findOne(postId);
+        console.log("\n\nBefore update",post);
+
+        if (!post) {
+            throw new NotFoundException('This Post doesn\'t exist');
+        }
+
+        if(!post.comments) {
+            post.comments = []
+        }
+        post.comments = post.comments ? [...post.comments, comment] : [comment];
+
+        await post.save()
+        return post;
+    }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':postId/like')
+    async removeLike(@Param('postId') postId: string, @Body('userId') userId: string): Promise<PostEntity> {
+      // Remove the user's ID from the likes array for the specified post
+      const post = await this.postService.findOne(postId);
+
+      if (!post) {
+        throw new NotFoundException('This Post doesn\'t exist');
+      }
+    
+      console.log('Before removal:', post.likes);
+    
+      const userIndex = post.likes.indexOf(userId);
+    
+      if (userIndex !== -1) {
+        post.likes.splice(userIndex, 1);
+        await post.save();
+    
+        console.log('After removal:', post.likes);
+    
+        return post;
+      } else {
+        // If the user hasn't liked the post, you can handle it as needed, for example, throw an exception
+        throw new ConflictException('User has not liked this post');
+      }
     }
 
     @UseGuards(AuthGuard('jwt'))

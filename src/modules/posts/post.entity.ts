@@ -1,6 +1,7 @@
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo, } from 'sequelize-typescript';
 import { User } from '../users/user.entity';
 import { use } from 'passport';
+import { json } from 'sequelize';
 
 @Table
 export class Post extends Model<Post> {
@@ -39,4 +40,16 @@ export class Post extends Model<Post> {
         allowNull: false,
     })
     mediaUrl: string;
+
+    @Column({
+        type: DataType.ARRAY(DataType.STRING),
+        allowNull: true,
+      })
+      likes: string[];
+
+      @Column({
+        type: DataType.JSON,
+        allowNull: true,
+      })
+      comments: object[];
 }

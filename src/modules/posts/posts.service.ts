@@ -12,6 +12,10 @@ export class PostsService {
         return await this.postRepository.create<Post>({ ...post, userId });
     }
 
+    async addLike(postDto: PostDto, userId: string): Promise<Post> {
+        return await this.postRepository.create<Post>({ ...postDto, userId });
+      }
+
     async findAll(): Promise<Post[]> {
         return await this.postRepository.findAll<Post>({
         	include: [{ model: User, attributes: { exclude: ['password'] } }],

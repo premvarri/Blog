@@ -49,4 +49,16 @@ export class User extends Model<User> {
         allowNull: false,
     })
     password_hash: string;
+
+    @Column({
+        type: DataType.ARRAY(DataType.STRING),
+        allowNull: true,
+      })
+      friendsList: string[];
+
+      @Column({
+        type: DataType.ARRAY(DataType.STRING),
+        allowNull: true,
+      })
+      friendsRequest: string[];
 }
